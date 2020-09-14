@@ -8,40 +8,37 @@ class AquiLoadButton extends React.Component {
     constructor() {
       super();
         this.state = {
-        error: null,
+        data: null,
         isLoaded: false,
         items: []
       };
       this.handleClick = this.handleClick.bind(this);
     }
     handleClick () {
-      alert("hi");
+      console.log(this.state.items[0].techname);
 
     }
 
     componentDidMount() {
-        fetch("http://www.airnowapi.org/aq/forecast/zipCode/?format=application/json&zipCode=98109&date=2020-09-14&distance=25&API_KEY=8232EB37-A326-41FD-8E59-303E253E2294")
-          .then(res => res.json())
-          .then(
-            (result) => {
-              this.setState({
-                isLoaded: true,
-                items: result.items
-              });
-            },
-            // Note: it's important to handle errors here
-            // instead of a catch() block so that we don't swallow
-            // exceptions from actual bugs in components.
-            (error) => {
-              this.setState({
-                isLoaded: true,
-                error
-              });
-            }
-          )
-      }
-
-
+      // fetch("http://www.airnowapi.org/aq/forecast/zipCode/?format=application/json&zipCode=98109&date=2020-09-14&distance=25&API_KEY=8232EB37-A326-41FD-8E59-303E253E2294")
+      fetch("http://bjjtech.herokuapp.com/api/tech/related/280")
+        .then(response => response.json())
+        .then(
+          result => {
+            this.setState({
+              isLoaded: true,
+              items: result.data
+            });
+          },
+          error => {
+            alert(error)
+            this.setState({
+              isLoaded: true,
+              error: error
+            });
+          }
+        );
+    }
 
     render() {
       const { error, isLoaded, items } = this.state;
@@ -60,9 +57,7 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <p>
           <AquiLoadButton name="Air Quality Index"/>
-        </p>
       </header>
     </div>
   );
