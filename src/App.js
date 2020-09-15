@@ -12,22 +12,32 @@ class AquiLoadButton extends React.Component {
         isLoaded: false,
         items: []
       };
+      this.cors_proxy = {
+        url: "https://cors-anywhere.herokuapp.com/",
+        header: "x-requested-with"
+      };
+      this.aqi_service = {
+        url: "http://www.airnowapi.org/aq/forecast/",
+        params: "zipCode/?format=application/json",
+        key: "&API_KEY=8232EB37-A326-41FD-8E59-303E253E2294",
+      };
       this.handleClick = this.handleClick.bind(this);
     }
     handleClick () {
-      console.log(this.state.items[0].techname);
+      console.log(this.state.items);
 
     }
 
     componentDidMount() {
-      // fetch("http://www.airnowapi.org/aq/forecast/zipCode/?format=application/json&zipCode=98109&date=2020-09-14&distance=25&API_KEY=8232EB37-A326-41FD-8E59-303E253E2294")
-      fetch("http://bjjtech.herokuapp.com/api/tech/related/280")
+      // https://cors-anywhere.herokuapp.com/http://www.airnowapi.org/aq/forecast/zipCode/?format=application/json&zipCode=98109&date=2020-09-14&distance=25&API_KEY=8232EB37-A326-41FD-8E59-303E253E2294
+      var url = this.cors_proxy.url+this.aqi_service.url+this.aqi_service.params+"&zipCode=98109&distance=25"+this.aqi_service.key;
+      fetch(url, {headers: {"x-requested-with": null}})
         .then(response => response.json())
         .then(
           result => {
             this.setState({
               isLoaded: true,
-              items: result.data
+              items: result
             });
           },
           error => {
