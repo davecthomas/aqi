@@ -1,6 +1,9 @@
 # aqi
 Air quality index react app
 
+## See it in action on Heroku
+https://airqi.herokuapp.com/
+
 ## Starting dev env
 ```
 npm start
