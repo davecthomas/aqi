@@ -7,7 +7,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 class AquiLoadButton extends React.Component {
     constructor() {
       super();
-        this.state = {
+      this.state = {
         data: null,
         isLoaded: false,
         items: []
@@ -25,6 +25,7 @@ class AquiLoadButton extends React.Component {
     }
     handleClick () {
       console.log(this.state.items);
+      console.log(this.state.aqi);
 
     }
 
@@ -35,9 +36,15 @@ class AquiLoadButton extends React.Component {
         .then(response => response.json())
         .then(
           result => {
+
             this.setState({
               isLoaded: true,
-              items: result
+              items: result,
+              metric: result[1].ParameterName,
+              aqi: result[1].AQI,
+              location: result[1].ReportingArea,
+              evaluation: result[1].Category.Number,
+              evaluation_description: result[1].Category.Name
             });
           },
           error => {
@@ -50,6 +57,10 @@ class AquiLoadButton extends React.Component {
         );
     }
 
+    getAqi = () => {
+      return this.state.aqi;
+    }
+
     render() {
       const { error, isLoaded, items } = this.state;
       if (error) {
@@ -57,18 +68,30 @@ class AquiLoadButton extends React.Component {
       } else if (!isLoaded) {
         return <div>Loading...</div>;
       } else {
-        return <Button onClick={this.handleClick}>{this.props.name}</Button>;
+        return <div><h2>{this.state.metric} in {this.state.location}: {this.state.aqi}</h2>
+        <p>Category {this.state.evaluation} ({this.state.evaluation_description})</p></div>;
+        // return <Button onClick={this.handleClick} aqi={this.state.items}>{this.props.name}</Button>;
       }
     }
 }
 
+class AqiContent extends React.Component {
+  render() {
+    return (<div>{this.props.aqi}</div>)
+  }
+}
 
 function App() {
   return (
     <div className="App">
       <header className="App-header">
-          <AquiLoadButton name="Air Quality Index"/>
+
       </header>
+      <div className="App-body">
+      <AquiLoadButton name="Air Quality Index">
+        <AqiContent aqi={10}/>
+      </AquiLoadButton>
+      </div>
     </div>
   );
 }
