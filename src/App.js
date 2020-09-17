@@ -1,10 +1,82 @@
 import React from 'react';
-// import logo from './logo.svg';
 import Button from 'react-bootstrap/Button';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
+// import location_img from './my_location.png';
 
-class AquiLoadButton extends React.Component {
+class Location extends React.Component{
+  constructor() {
+    super();
+    this.state = {
+        error: null,
+    };
+    this.default = {
+      lat: 47.6205099,
+      lon: -122.3514661
+    };
+    this.status = null;
+    this.postion_coords = null;
+    this.handleClick = this.handleClick.bind(this);
+
+  }
+
+  handleClick () {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(this.getCurrentPositionCallback, this.getCurrentPositionError);
+      this.status = "";
+    } else {
+      this.status = "Geolocation is not supported by this browser.";
+      console.log(this.status)
+    }
+  }
+
+  componentDidMount() {
+
+  }
+
+  getCurrentPositionCallback = position => {
+    console.log(position.coords)
+    this.postion_coords = position.coords;
+    console.log(this.ppostion_coords)
+    this.forceUpdate();
+  }
+
+   getCurrentPositionCallbackError(error) {
+    console.log('Geolocation error : code ' + error.code + ' - ' + error.message);
+    this.state.error = error.code + ' - ' + error.message;
+  }
+
+  onChange(){
+    console.log("onchange");
+  }
+
+  render() {
+    // if (this.state.position != null) {
+    //   pos_jsx =
+    //     <p>Latitude: {this.state.position.coords.latitude}
+    //     <br/>Longitude: {this.state.position.coords.longitude} </p>;
+    // } else {
+    //   pos_jsx = <p>Location error {this.state.error}</p>;
+    // }
+    //  <img src={location_img} onClick={this.myfunction} />
+    var lat = null;
+    var lon = null;
+    var location = "";
+    if (this.postion_coords != null){
+      lat = this.postion_coords.latitude;
+      lon = this.postion_coords.longitude;
+      location = "Location: "+ lat + ", " + lon;
+    }
+    return(
+      <div>
+      <Button onClick={this.handleClick}>Use my location</Button>
+      <p>{location}</p>
+      </div>
+      );
+  }
+}
+
+class AquiLoad extends React.Component {
     constructor() {
       super();
       this.state = {
@@ -30,7 +102,6 @@ class AquiLoadButton extends React.Component {
     }
 
     componentDidMount() {
-      // https://cors-anywhere.herokuapp.com/http://www.airnowapi.org/aq/forecast/zipCode/?format=application/json&zipCode=98109&date=2020-09-14&distance=25&API_KEY=8232EB37-A326-41FD-8E59-303E253E2294
       var url = this.cors_proxy.url+this.aqi_service.url+this.aqi_service.params+"&zipCode=98109&distance=25"+this.aqi_service.key;
       fetch(url, {headers: {"x-requested-with": null}})
         .then(response => response.json())
@@ -88,10 +159,12 @@ function App() {
 
       </header>
       <div className="App-body">
-      <AquiLoadButton name="Air Quality Index">
-        <AqiContent aqi={10}/>
-      </AquiLoadButton>
+      <AquiLoad name="Air Quality Index">
+        <AqiContent/>
+      </AquiLoad>
       </div>
+
+      <Location/>
     </div>
   );
 }
