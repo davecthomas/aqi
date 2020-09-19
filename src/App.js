@@ -4,18 +4,55 @@ import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 // import location_img from './my_location.png';
 
+// https://www.digitalocean.com/community/tutorials/how-to-integrate-the-google-maps-api-into-react-applications
+import {Map, InfoWindow, Marker, GoogleApiWrapper} from 'google-maps-react';
+
+const mapStyles = {
+  width: '50%',
+  height: '50%'
+};
+
+export class MapContainer extends React.Component {
+  state = {
+    showingInfoWindow: false,  // Hides or shows the InfoWindow
+    activeMarker: {},          // Shows the active marker upon click
+    selectedPlace: {}          // Shows the InfoWindow to the selected place upon a marker
+  };
+
+  render() {
+    return (
+      <Map
+        google={this.props.google}
+        zoom={14}
+        style={mapStyles}
+        initialCenter={
+          {
+            lat: 40.1616,
+            lon: -74.4418
+          }
+        }
+      />
+    );
+  }
+}
+
+GoogleApiWrapper({
+  apiKey: ("AIzaSyBYD9kl_bCw4tfChsC0GFOcVXgKEG5gyBA")
+})(MapContainer)
+
 class Location extends React.Component{
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
+    this._child = React.createRef();
     this.state = {
         error: null,
     };
     this.default = {
-      lat: 47.6205099,
-      lon: -122.3514661
+        lat: 40.1616,
+        lon: -74.4418
     };
     this.status = null;
-    this.postion_coords = null;
+    this.position_coords = null;
     this.handleClick = this.handleClick.bind(this);
 
   }
@@ -36,9 +73,9 @@ class Location extends React.Component{
 
   getCurrentPositionCallback = position => {
     console.log(position.coords)
-    this.postion_coords = position.coords;
-    console.log(this.ppostion_coords)
+    this.position_coords = position.coords;
     this.forceUpdate();
+    this._child.current.refreshAqi(this.position_coords.latitude, this.position_coords.longitude);
   }
 
    getCurrentPositionCallbackError(error) {
@@ -50,35 +87,36 @@ class Location extends React.Component{
     console.log("onchange");
   }
 
+  getLocation(){
+    return this.position_coords;
+  }
+
   render() {
-    // if (this.state.position != null) {
-    //   pos_jsx =
-    //     <p>Latitude: {this.state.position.coords.latitude}
-    //     <br/>Longitude: {this.state.position.coords.longitude} </p>;
-    // } else {
-    //   pos_jsx = <p>Location error {this.state.error}</p>;
-    // }
-    //  <img src={location_img} onClick={this.myfunction} />
     var lat = null;
     var lon = null;
     var location = "";
-    if (this.postion_coords != null){
-      lat = this.postion_coords.latitude;
-      lon = this.postion_coords.longitude;
-      location = "Location: "+ lat + ", " + lon;
+    if (this.position_coords != null){
+      lat = this.position_coords.latitude;
+      lon = this.position_coords.longitude;
+    } else {
+      lat = this.default.lat;
+      lon = this.default.lon;
     }
+    location = "Location: "+ lat + ", " + lon;
     return(
       <div>
       <Button onClick={this.handleClick}>Use my location</Button>
-      <p>{location}</p>
+      <p id="location" lat={lat} lon={lon}>{location}</p>
+      <AqiLoad ref={this._child} name="Air Quality Index" lat={lat} lon={lon}>
+      </AqiLoad>
       </div>
       );
   }
 }
 
-class AquiLoad extends React.Component {
-    constructor() {
-      super();
+class AqiLoad extends React.Component {
+    constructor(props) {
+      super(props);
       this.state = {
         data: null,
         isLoaded: false,
@@ -90,42 +128,67 @@ class AquiLoad extends React.Component {
       };
       this.aqi_service = {
         url: "http://www.airnowapi.org/aq/forecast/",
-        params: "zipCode/?format=application/json",
+        params: "latLong/?format=application/json",
         key: "&API_KEY=8232EB37-A326-41FD-8E59-303E253E2294",
       };
-      this.handleClick = this.handleClick.bind(this);
+      this.default = {
+        lat: 40.1616,
+        lon: -74.4418
+      };
+      if (this.props.lat){
+        this.lat = this.props.lat;
+      } else{
+        this.lat = this.default.lat;
+      }
+      if (this.props.lon){
+        this.lon = this.props.lon
+      } else {
+        this.lon = this.default.lon;
+      }
     }
-    handleClick () {
-      console.log(this.state.items);
-      console.log(this.state.aqi);
+
+    refreshAqi(lat=null, lon=null) {
+      if ((lat != null) && (lon != null)){
+        this.lat = lat;
+        this.lon = lon;
+      }
+      if (this.state.isLoaded){
+        var url = this.cors_proxy.url+this.aqi_service.url+this.aqi_service.params+"&latitude="+this.lat+"&longitude="+this.lon+this.aqi_service.key;
+        alert (url);
+        fetch(url, {headers: {"x-requested-with": null}})
+          .then(response => response.json())
+          .then(
+            result => {
+              this.setState({
+                isLoaded: true,
+                items: result,
+                metric: result[1].ParameterName,
+                aqi: result[1].AQI,
+                location: result[1].ReportingArea,
+                evaluation: result[1].Category.Number,
+                evaluation_description: result[1].Category.Name
+              });
+            },
+            error => {
+              alert(error)
+              this.setState({
+                isLoaded: true,
+                error: error
+              });
+            }
+          );
+        // if (document.getElementById("location") != null){
+        //   var lat = document.getElementById("location").getAttribute("lat");
+        //   var lon = document.getElementById("location").getAttribute("lon");
+        // }
+      }
 
     }
 
     componentDidMount() {
-      var url = this.cors_proxy.url+this.aqi_service.url+this.aqi_service.params+"&zipCode=98109&distance=25"+this.aqi_service.key;
-      fetch(url, {headers: {"x-requested-with": null}})
-        .then(response => response.json())
-        .then(
-          result => {
+      this.state.isLoaded = true;
+      this.refreshAqi();
 
-            this.setState({
-              isLoaded: true,
-              items: result,
-              metric: result[1].ParameterName,
-              aqi: result[1].AQI,
-              location: result[1].ReportingArea,
-              evaluation: result[1].Category.Number,
-              evaluation_description: result[1].Category.Name
-            });
-          },
-          error => {
-            alert(error)
-            this.setState({
-              isLoaded: true,
-              error: error
-            });
-          }
-        );
     }
 
     getAqi = () => {
@@ -139,32 +202,28 @@ class AquiLoad extends React.Component {
       } else if (!isLoaded) {
         return <div>Loading...</div>;
       } else {
-        return <div><h2>{this.state.metric} in {this.state.location}: {this.state.aqi}</h2>
-        <p>Category {this.state.evaluation} ({this.state.evaluation_description})</p></div>;
-        // return <Button onClick={this.handleClick} aqi={this.state.items}>{this.props.name}</Button>;
+        return <div><h2 lat={this.lat} lon={this.lon}>{this.state.metric} in {this.state.location}: {this.state.aqi}</h2>
+        <p>Category {this.state.evaluation} ({this.state.evaluation_description})</p>
+        </div>;
       }
     }
 }
 
-class AqiContent extends React.Component {
-  render() {
-    return (<div>{this.props.aqi}</div>)
-  }
-}
+// class AqiContent extends React.Component {
+//   render() {
+//     return (<div>{this.props.aqi}</div>)
+//   }
+// }
 
 function App() {
   return (
     <div className="App">
       <header className="App-header">
-
       </header>
       <div className="App-body">
-      <AquiLoad name="Air Quality Index">
-        <AqiContent/>
-      </AquiLoad>
-      </div>
-
       <Location/>
+      </div>
+      <MapContainer/>
     </div>
   );
 }
