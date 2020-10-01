@@ -3,7 +3,7 @@ import Button from 'react-bootstrap/Button';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-const maps_key = REACT_APP_MAPS_KEY;
+const maps_key = process.env.REACT_APP_MAPS_KEY;
 /*global google*/
 
 // import GoogleMapReact from 'google-map-react';
@@ -291,17 +291,24 @@ class AqiLoad extends React.Component {
     }
 }
 
-// class AqiContent extends React.Component {
-//   render() {
-//     return (<div>{this.props.aqi}</div>)
-//   }
-// }
+class AqiMap extends React.Component {
+  constructor(props) {
+      super(props);
+      this.maps_key = maps_key;
+      this.src = "https://maps.googleapis.com/maps/api/js?key="+this.maps_key+"&callback=initMap&libraries=&v=weekly";
+  }
+  render() {
+    return (
+     <script src={this.src} defer></script>
+    )
+  }
+}
 
 function App() {
   return (
     <div className="App">
       <header className="App-header">
-      <script src="https://maps.googleapis.com/maps/api/js?key={maps_key}&callback=initMap&libraries=&v=weekly" defer></script>
+      <AqiMap/>
       </header>
       <div className="App-body">
       <Location/>
