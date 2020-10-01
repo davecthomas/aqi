@@ -3,7 +3,7 @@ import Button from 'react-bootstrap/Button';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-const maps_key = "8232EB37-A326-41FD-8E59-303E253E2294";
+const maps_key = REACT_APP_MAPS_KEY;
 /*global google*/
 
 // import GoogleMapReact from 'google-map-react';
@@ -61,7 +61,7 @@ const maps_key = "8232EB37-A326-41FD-8E59-303E253E2294";
 //       // Important! Always set the container height explicitly
 //       <div style={{ height: '90vh', width: '100%' }}>
 //         <GoogleMapReact
-//           bootstrapURLKeys={{ key: "AIzaSyCUpHSDHfDFuJHx9RrBPkgK54GRGw107w8" }}
+//           bootstrapURLKeys={{ key: maps_key }}
 //           defaultCenter={{lat: this.lat, lng: this.lon}}
 //           center={[this.lat, this.lon]}
 //           defaultZoom={this.props.zoom}
@@ -198,6 +198,7 @@ class Location extends React.Component{
 
 class AqiLoad extends React.Component {
     constructor(props) {
+      alert(maps_key);
       super(props);
       this.state = {
         data: null,
@@ -211,7 +212,7 @@ class AqiLoad extends React.Component {
       this.aqi_service = {
         url: "http://www.airnowapi.org/aq/forecast/",
         params: "latLong/?format=application/json",
-        key: "&API_KEY=8232EB37-A326-41FD-8E59-303E253E2294",
+        key: "&API_KEY="+maps_key,
       };
       this.default = {
         lat: 40.1616,
@@ -300,7 +301,7 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-      <script src="https://maps.googleapis.com/maps/api/js?key=8232EB37-A326-41FD-8E59-303E253E2294&callback=initMap&libraries=&v=weekly" defer></script>
+      <script src="https://maps.googleapis.com/maps/api/js?key={maps_key}&callback=initMap&libraries=&v=weekly" defer></script>
       </header>
       <div className="App-body">
       <Location/>
