@@ -198,7 +198,6 @@ class Location extends React.Component{
 
 class AqiLoad extends React.Component {
     constructor(props) {
-      alert(maps_key);
       super(props);
       this.state = {
         data: null,
