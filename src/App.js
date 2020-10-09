@@ -4,119 +4,7 @@ import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const maps_key = process.env.REACT_APP_MAPS_KEY;
-/*global google*/
-
-// import GoogleMapReact from 'google-map-react';
-
-// const bindResizeListener = (map, maps, bounds) => {
-//   maps.event.addDomListenerOnce(map, 'idle', () => {
-//     maps.event.addDomListener(window, 'resize', () => {
-//       map.fitBounds(bounds);
-//     });
-//   });
-// };
-
-// const apiIsLoaded = (map, maps) => {
-//   if (map) {
-//     const bounds = new maps.LatLngBounds();
-//     map.fitBounds(bounds);
-//     bindResizeListener(map, maps, bounds);
-//   }
-// };
-
-// class AqiMap extends React.Component {
-
-//   static defaultProps = {
-//     center: {
-//       lat: 40.1616,
-//       lng: -74.4418
-//     },
-//     zoom: 11
-//   };
-
-//   constructor(props) {
-//     super(props);
-
-//     if (this.props.lat){
-//       this.lat = this.props.lat;
-//     } else{
-//       this.lat = AqiMap.defaultProps.center.lat;
-//     }
-//     if (this.props.lon){
-//       this.lon = this.props.lon
-//     } else {
-//       this.lon = AqiMap.defaultProps.center.lng;
-//     }
-//   }
-
-//   updateLocation(lat, lon){
-//     alert(lat+", " +lon);
-//     this.setState({
-//       center: {lat: lat, lng: lon}
-//     });
-//   }
-
-//   render() {
-//     return (
-//       // Important! Always set the container height explicitly
-//       <div style={{ height: '90vh', width: '100%' }}>
-//         <GoogleMapReact
-//           bootstrapURLKeys={{ key: maps_key }}
-//           defaultCenter={{lat: this.lat, lng: this.lon}}
-//           center={[this.lat, this.lon]}
-//           defaultZoom={this.props.zoom}
-//         >
-//         </GoogleMapReact>
-//       </div>
-//     );
-//   }
-// }
-
-// Note: This example requires that you consent to location sharing when
-// prompted by your browser. If you see the error "The Geolocation service
-// failed.", it means you probably did not give permission for the browser to
-// locate you.
-let map, infoWindow;
-
-function initMap() {
-  map = new google.maps.Map(document.getElementById("map"), {
-    center: { lat: -34.397, lng: 150.644 },
-    zoom: 6
-  });
-  infoWindow = new google.maps.InfoWindow();
-
-  // Try HTML5 geolocation.
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-      position => {
-        const pos = {
-          lat: position.coords.latitude,
-          lng: position.coords.longitude
-        };
-        infoWindow.setPosition(pos);
-        infoWindow.setContent("Location found.");
-        infoWindow.open(map);
-        map.setCenter(pos);
-      },
-      () => {
-        handleLocationError(true, infoWindow, map.getCenter());
-      }
-    );
-  } else {
-    // Browser doesn't support Geolocation
-    handleLocationError(false, infoWindow, map.getCenter());
-  }
-}
-
-function handleLocationError(browserHasGeolocation, infoWindow, pos) {
-  infoWindow.setPosition(pos);
-  infoWindow.setContent(
-    browserHasGeolocation
-      ? "Error: The Geolocation service failed."
-      : "Error: Your browser doesn't support geolocation."
-  );
-  infoWindow.open(map);
-}
+const google = window.google;
 
 class Location extends React.Component{
   constructor(props) {
@@ -211,7 +99,7 @@ class AqiLoad extends React.Component {
       this.aqi_service = {
         url: "http://www.airnowapi.org/aq/forecast/",
         params: "latLong/?format=application/json",
-        key: "&API_KEY="+maps_key,
+        key: "&API_KEY="+process.env.REACT_APP_AIRNOW_KEY,
       };
       this.default = {
         lat: 40.1616,
@@ -294,11 +182,32 @@ class AqiMap extends React.Component {
   constructor(props) {
       super(props);
       this.maps_key = maps_key;
-      this.src = "https://maps.googleapis.com/maps/api/js?key="+this.maps_key+"&callback=initMap&libraries=&v=weekly";
+      this.src = "https://maps.googleapis.com/maps/api/js?key="+this.maps_key+"&callback=googleMapsOnLoad";
+  }
+  componentDidMount() {
+    const script_gmaps =  document.createElement("script");
+    script_gmaps.src = this.src;
+    script_gmaps.defer = true;
+    document.body.appendChild(script_gmaps);
+    // const script = document.createElement("script");
+    // script.type="text/javascript";
+    // script.src = "./map.js";
+    // script.async = true;
+    // document.body.appendChild(script);
+
+
+    // Attach your callback function to the `window` object
+    window.googleMapsOnLoad = function () {
+      let map;
+      map = new google.maps.Map(document.getElementById("map"), {
+        center: { lat: -34.397, lng: 150.644 },
+        zoom: 8,
+      });
+    }
   }
   render() {
     return (
-     <script src={this.src} defer></script>
+     <div id="map"></div>
     )
   }
 }
@@ -307,10 +216,10 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-      <AqiMap/>
       </header>
       <div className="App-body">
       <Location/>
+      <AqiMap/>
       </div>
     </div>
   );
